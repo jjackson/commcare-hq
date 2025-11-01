@@ -53,7 +53,7 @@ class TestTransifexApiClient(TestFileMixin, SimpleTestCase):
 
     @classmethod
     def _get_file(cls, request, ext):
-        path_text = request.path.replace('/', '_')
+        path_text = request.path.replace('/', '_').replace(':', '_')
         file_path = DATA_PATH + 'api/' + request.method.lower() + path_text
         return cls.get_file(file_path, ext)
 
