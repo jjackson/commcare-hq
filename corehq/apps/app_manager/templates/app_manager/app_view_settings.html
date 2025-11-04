@@ -27,6 +27,9 @@
   {% initial_page_data 'media_refs' refs %}
   {% initial_page_data 'media_info' media_info %}
   {% initial_page_data 'uploaders' uploaders_js %}
+  {% if custom_ui_chat_options %}
+    {% initial_page_data 'custom_ui_chat_options' custom_ui_chat_options %}
+  {% endif %}
   {% registerurl 'app_multimedia_ajax' domain app.get_id %}
   {% registerurl "hqmedia_remove_logo" domain app.id %}
   {% registerurl "paginate_releases" domain app.get_id %}
