@@ -14,74 +14,66 @@ Generate single-file HTML custom UIs with inline CSS and JavaScript that use the
 
 ## CommCareAPI Bridge (Available in window.CommCareAPI)
 
-**IMPORTANT**: CommCareAPI has different implementations in preview vs mobile:
-- HQ Preview: Async methods (returns Promises)
-- Android/iOS Mobile: Sync methods (returns JSON strings)
+**IMPORTANT**: The CommCareAPI uses Android's synchronous interface. All methods return JSON strings that must be parsed.
 
-**Always use this wrapper** to work in both environments:
+### Core Methods:
 
 ```javascript
-// API Wrapper for cross-platform compatibility
-const API = {
-    async submitForm(data) {
-        if (window.CommCareAPI.submitForm.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-            return await window.CommCareAPI.submitForm(data);
-        } else {
-            const result = window.CommCareAPI.submitForm(JSON.stringify(data));
-            return JSON.parse(result);
-        }
-    },
-    
-    async getCases(caseType) {
-        if (window.CommCareAPI.getCases.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-            return await window.CommCareAPI.getCases(caseType);
-        } else {
-            const result = window.CommCareAPI.getCases(caseType || '');
-            return JSON.parse(result);
-        }
-    },
-    
-    async getCase(caseId) {
-        if (window.CommCareAPI.getCase.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-            return await window.CommCareAPI.getCase(caseId);
-        } else {
-            const result = window.CommCareAPI.getCase(caseId);
-            return JSON.parse(result);
-        }
-    },
-    
-    async getCurrentUser() {
-        if (window.CommCareAPI.getCurrentUser.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-            return await window.CommCareAPI.getCurrentUser();
-        } else {
-            const result = window.CommCareAPI.getCurrentUser();
-            return JSON.parse(result);
-        }
-    },
-    
-    log(level, message) {
-        window.CommCareAPI.log(level, message);
-    }
-};
-
-// Then use API instead of window.CommCareAPI:
-const result = await API.submitForm({
+// Submit form data to CommCare
+// Takes: JSON string, Returns: JSON string
+const resultJson = window.CommCareAPI.submitForm(JSON.stringify({
     xmlns: 'http://openrosa.org/formdesigner/form-id',
-    answers: { question_id_1: 'answer1', question_id_2: 'answer2' }
-});
+    answers: {
+        question_id_1: 'answer1',
+        question_id_2: 'answer2'
+    }
+}));
+const result = JSON.parse(resultJson);
+// result = { success: true, formRecordId: 'uuid', message: '...' }
 
-const cases = await API.getCases('patient');
-const caseData = await API.getCase('case-uuid-123');
-const user = await API.getCurrentUser();
-API.log('info', 'Message here');
+// Get all cases of a specific type
+// Takes: caseType string, Returns: JSON string
+const casesJson = window.CommCareAPI.getCases('patient');
+const cases = JSON.parse(casesJson);
+// cases = [{ caseId, name, caseType, status, ownerId, dateOpened, lastModified, properties: {...} }, ...]
+
+// Get a specific case by ID
+// Takes: caseId string, Returns: JSON string
+const caseJson = window.CommCareAPI.getCase('case-uuid-123');
+const caseData = JSON.parse(caseJson);
+// caseData = { caseId, name, caseType, status, ownerId, dateOpened, lastModified, properties: {...} }
+
+// Get current user information
+// Takes: nothing, Returns: JSON string
+const userJson = window.CommCareAPI.getCurrentUser();
+const user = JSON.parse(userJson);
+// user = { username, userId, uniqueId }
+
+// Log messages (for debugging)
+window.CommCareAPI.log('info', 'Message here');
+// Levels: 'debug', 'info', 'warn', 'error'
 ```
 
-### API Methods Return Values:
-- `submitForm()`: `{ success: true, formRecordId: 'uuid', message: '...' }`
-- `getCases(caseType)`: Array of `{ caseId, caseType, name, status, properties: {...} }`
-- `getCase(caseId)`: `{ caseId, caseType, name, status, dateOpened, lastModified, ownerId, properties: {...} }`
-- `getCurrentUser()`: `{ username, userId, domain?, isPreview? }`
-- `log(level, message)`: void (levels: 'debug', 'info', 'warn', 'error')
+### Recommended Helper Function:
+
+Always include this helper to make API calls cleaner:
+
+```javascript
+function callAPI(method, ...args) {
+    try {
+        const result = window.CommCareAPI[method](...args);
+        return JSON.parse(result);
+    } catch (e) {
+        console.error(`API call failed: ${method}`, e);
+        return { success: false, error: e.message };
+    }
+}
+
+// Usage:
+const user = callAPI('getCurrentUser');
+const cases = callAPI('getCases', 'patient');
+const result = callAPI('submitForm', JSON.stringify({ xmlns: '...', answers: {...} }));
+```
 
 ## Requirements for Generated UIs:
 
@@ -128,57 +120,33 @@ API.log('info', 'Message here');
     </div>
     
     <script>
-        // CommCareAPI Wrapper (ALWAYS INCLUDE THIS)
-        const API = {
-            async submitForm(data) {
-                if (window.CommCareAPI.submitForm.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-                    return await window.CommCareAPI.submitForm(data);
-                } else {
-                    const result = window.CommCareAPI.submitForm(JSON.stringify(data));
-                    return JSON.parse(result);
-                }
-            },
-            async getCases(caseType) {
-                if (window.CommCareAPI.getCases.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-                    return await window.CommCareAPI.getCases(caseType);
-                } else {
-                    const result = window.CommCareAPI.getCases(caseType || '');
-                    return JSON.parse(result);
-                }
-            },
-            async getCase(caseId) {
-                if (window.CommCareAPI.getCase.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-                    return await window.CommCareAPI.getCase(caseId);
-                } else {
-                    const result = window.CommCareAPI.getCase(caseId);
-                    return JSON.parse(result);
-                }
-            },
-            async getCurrentUser() {
-                if (window.CommCareAPI.getCurrentUser.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
-                    return await window.CommCareAPI.getCurrentUser();
-                } else {
-                    const result = window.CommCareAPI.getCurrentUser();
-                    return JSON.parse(result);
-                }
-            },
-            log(level, message) {
-                window.CommCareAPI.log(level, message);
+        // Helper function for cleaner API calls (ALWAYS INCLUDE THIS)
+        function callAPI(method, ...args) {
+            try {
+                const result = window.CommCareAPI[method](...args);
+                return JSON.parse(result);
+            } catch (e) {
+                console.error(`API call failed: ${method}`, e);
+                return { success: false, error: e.message };
             }
-        };
+        }
         
         // Initialize app
-        async function init() {
+        function init() {
             if (!window.CommCareAPI) {
                 console.error('CommCareAPI not available');
                 return;
             }
             
-            API.log('info', 'Custom UI initialized');
+            window.CommCareAPI.log('info', 'Custom UI initialized');
             
-            // Your app logic here using API
-            const user = await API.getCurrentUser();
+            // Your app logic here
+            const user = callAPI('getCurrentUser');
             console.log('Current user:', user);
+            
+            // Example: Load cases
+            const cases = callAPI('getCases', 'patient');
+            console.log('Cases:', cases);
         }
         
         // Initialize when DOM is ready

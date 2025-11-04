@@ -309,9 +309,11 @@ class PreviewAppView(TemplateView):
     
     def get_commcare_api_bridge(self, request, app):
         """
-        Generate JavaScript CommCareAPI bridge.
-        This provides mock implementations for preview mode.
-        Phase 5 will implement real API calls via Formplayer.
+        Generate JavaScript CommCareAPI bridge that matches Android's interface EXACTLY.
+        This ensures the preview shows exactly what will run on mobile devices.
+        
+        Returns synchronous methods that return JSON strings, matching Android's
+        JavascriptInterface implementation.
         """
         username = request.user.username
         user_id = str(request.couch_user.user_id) if hasattr(request, 'couch_user') else 'preview-user'
@@ -319,88 +321,110 @@ class PreviewAppView(TemplateView):
         
         return f"""
         <script>
-        // CommCareAPI Bridge (Preview Mode - Mock Implementation)
+        // CommCareAPI Bridge - Matches Android interface exactly
+        // Returns JSON strings (not objects) to match mobile WebView behavior
         window.CommCareAPI = {{
-            submitForm: async function(data) {{
-                console.log('[CommCareAPI Preview] submitForm called with:', data);
+            submitForm: function(formDataJson) {{
+                console.log('[CommCareAPI Preview] submitForm called');
                 
-                // Mock implementation for preview mode
-                alert('Form Submitted (Preview Mode)\\n\\nxmlns: ' + (data.xmlns || 'N/A') + '\\n\\nData: ' + JSON.stringify(data.answers || data, null, 2));
-                
-                // Return mock success response
-                return {{
-                    success: true,
-                    formRecordId: 'preview-form-' + Date.now(),
-                    message: 'Form submitted successfully (preview mode)'
-                }};
+                try {{
+                    const data = JSON.parse(formDataJson);
+                    console.log('[CommCareAPI Preview] Form data:', data);
+                    
+                    // Show alert in preview (mobile would submit for real)
+                    alert('Form Submitted (Preview Mode)\\n\\nxmlns: ' + (data.xmlns || 'N/A') + '\\n\\nData: ' + JSON.stringify(data.answers || data, null, 2));
+                    
+                    // Return JSON string (same as Android)
+                    return JSON.stringify({{
+                        success: true,
+                        formRecordId: 'preview-form-' + Date.now(),
+                        message: 'Form submitted successfully (preview mode)'
+                    }});
+                }} catch (e) {{
+                    console.error('[CommCareAPI Preview] Error:', e);
+                    return JSON.stringify({{
+                        success: false,
+                        error: e.message
+                    }});
+                }}
             }},
             
-            getCases: async function(caseType) {{
+            getCases: function(caseType) {{
                 console.log('[CommCareAPI Preview] getCases called for type:', caseType);
                 
-                // Return mock case data
-                return [
+                // Return JSON string with mock case data
+                const cases = [
                     {{ 
-                        case_id: 'case-001', 
-                        case_name: 'John Doe (Mock)', 
-                        case_type: caseType || 'patient',
-                        owner_id: '{user_id}',
-                        date_opened: '2024-01-15',
+                        caseId: 'case-001', 
+                        name: 'John Doe (Preview)', 
+                        caseType: caseType || 'patient',
+                        status: 'open',
+                        ownerId: '{user_id}',
+                        dateOpened: '2024-01-15',
+                        lastModified: '2024-01-20',
                         properties: {{
                             age: '45',
                             status: 'active'
                         }}
                     }},
                     {{ 
-                        case_id: 'case-002', 
-                        case_name: 'Jane Smith (Mock)', 
-                        case_type: caseType || 'patient',
-                        owner_id: '{user_id}',
-                        date_opened: '2024-01-20',
+                        caseId: 'case-002', 
+                        name: 'Jane Smith (Preview)', 
+                        caseType: caseType || 'patient',
+                        status: 'open',
+                        ownerId: '{user_id}',
+                        dateOpened: '2024-01-20',
+                        lastModified: '2024-01-22',
                         properties: {{
                             age: '32',
                             status: 'active'
                         }}
                     }}
                 ];
+                
+                return JSON.stringify(cases);
             }},
             
-            getCase: async function(caseId) {{
+            getCase: function(caseId) {{
                 console.log('[CommCareAPI Preview] getCase called for ID:', caseId);
                 
-                return {{
-                    case_id: caseId,
-                    case_name: 'Mock Patient #' + caseId,
-                    case_type: 'patient',
-                    owner_id: '{user_id}',
-                    date_opened: '2024-01-15',
+                // Return JSON string with mock case
+                const caseData = {{
+                    caseId: caseId,
+                    name: 'Mock Patient #' + caseId,
+                    caseType: 'patient',
+                    status: 'open',
+                    ownerId: '{user_id}',
+                    dateOpened: '2024-01-15',
+                    lastModified: '2024-01-20',
                     properties: {{
                         age: '45',
                         status: 'active',
-                        notes: 'This is mock data for preview'
+                        notes: 'This is preview mock data'
                     }}
                 }};
+                
+                return JSON.stringify(caseData);
             }},
             
-            getCurrentUser: async function() {{
+            getCurrentUser: function() {{
                 console.log('[CommCareAPI Preview] getCurrentUser called');
                 
-                return {{
+                // Return JSON string with user info
+                const user = {{
                     username: '{username}',
-                    userId: '{user_id}',
-                    domain: '{domain}',
-                    isPreview: true
+                    uniqueId: '{user_id}',
+                    userId: '{username}'
                 }};
+                
+                return JSON.stringify(user);
             }},
             
             log: function(level, message) {{
                 const levels = ['debug', 'info', 'warn', 'error'];
                 const logLevel = levels.includes(level) ? level : 'log';
                 console[logLevel]('[CommCareAPI]', message);
-            }},
-            
-            // Preview mode indicator
-            isPreview: true
+            }}
         }};
         
         console.log('[CommCareAPI] Bridge loaded in preview mode');
