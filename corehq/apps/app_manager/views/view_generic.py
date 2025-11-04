@@ -139,6 +139,8 @@ def view_generic(
         
         # Add AI feature flag for Custom UI chat interface
         context['ENABLE_CUSTOM_UI_AI'] = getattr(settings, 'ENABLE_CUSTOM_UI_AI', False)
+        print(f"DEBUG: ENABLE_CUSTOM_UI_AI in settings = {getattr(settings, 'ENABLE_CUSTOM_UI_AI', False)}")
+        print(f"DEBUG: ANTHROPIC_API_KEY exists = {bool(getattr(settings, 'ANTHROPIC_API_KEY', ''))}")
 
     if form or module:
         context.update(_get_multimedia_context(
