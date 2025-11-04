@@ -90,6 +90,7 @@ from corehq.apps.app_manager.views.custom_ui import (
     save_custom_ui,
     get_custom_ui_status,
     disable_custom_ui,
+    view_custom_ui_html,
     generate_ui_with_ai,
     get_conversation_context,
 )
@@ -127,6 +128,7 @@ app_urls = [
     url(r'^custom_ui/save/$', save_custom_ui, name='save_custom_ui'),
     url(r'^custom_ui/status/$', get_custom_ui_status, name='get_custom_ui_status'),
     url(r'^custom_ui/disable/$', disable_custom_ui, name='disable_custom_ui'),
+    url(r'^custom_ui/view_html/$', view_custom_ui_html, name='view_custom_ui_html'),
     # AI Generation endpoints
     url(r'^custom_ui/generate/$', generate_ui_with_ai, name='generate_ui_with_ai'),
     url(r'^custom_ui/context/$', get_conversation_context, name='get_conversation_context'),

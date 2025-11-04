@@ -147,6 +147,40 @@ def get_custom_ui_status(request, domain, app_id):
         }, status=500)
 
 
+@login_and_domain_required
+@require_permission(HqPermissions.edit_apps, login_decorator=None)
+def view_custom_ui_html(request, domain, app_id):
+    """
+    View the raw HTML of the current custom UI
+    """
+    try:
+        app = get_app(domain, app_id)
+        
+        if not app.profile.get('custom_ui_enabled'):
+            return HttpResponse('No custom UI is currently active', status=404)
+        
+        multimedia_id = app.profile.get('custom_ui_multimedia_id')
+        if not multimedia_id:
+            return HttpResponse('No custom UI multimedia found', status=404)
+        
+        try:
+            multimedia = CommCareMultimedia.get(multimedia_id)
+            html_content = multimedia.get_display_file(return_type='content')
+            
+            # Return as plain text for viewing
+            return HttpResponse(
+                html_content,
+                content_type='text/plain; charset=utf-8'
+            )
+        except Exception as e:
+            logger.exception(f"Error retrieving custom UI HTML for app {app_id}")
+            return HttpResponse(f'Error retrieving HTML: {str(e)}', status=500)
+            
+    except Exception as e:
+        logger.exception(f"Error viewing custom UI HTML for app {app_id}")
+        return HttpResponse(f'Error: {str(e)}', status=500)
+
+
 @require_POST
 @login_and_domain_required
 @require_permission(HqPermissions.edit_apps, login_decorator=None)
