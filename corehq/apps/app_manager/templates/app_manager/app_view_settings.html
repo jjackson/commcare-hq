@@ -27,6 +27,7 @@
   {% initial_page_data 'media_refs' refs %}
   {% initial_page_data 'media_info' media_info %}
   {% initial_page_data 'uploaders' uploaders_js %}
+  <!-- DEBUG: ENABLE_CUSTOM_UI_AI = {{ ENABLE_CUSTOM_UI_AI }}, custom_ui_chat_options = {{ custom_ui_chat_options|default:"NOT SET" }} -->
   {% if custom_ui_chat_options %}
     {% initial_page_data 'custom_ui_chat_options' custom_ui_chat_options %}
   {% endif %}
