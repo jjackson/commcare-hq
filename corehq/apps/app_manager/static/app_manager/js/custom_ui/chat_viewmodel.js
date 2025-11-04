@@ -13,12 +13,14 @@ function CustomUIChatViewModel(config) {
     self.generateUrl = config.generateUrl;
     self.statusUrl = config.statusUrl;
     self.disableUrl = config.disableUrl;
+    self.enableUrl = config.enableUrl;
     
     // Observable properties
     self.messages = ko.observableArray([]);
     self.currentMessage = ko.observable('');
     self.isGenerating = ko.observable(false);
     self.customUIEnabled = ko.observable(false);
+    self.hasHtml = ko.observable(false);
     self.lastUpdateTime = ko.observable('');
     
     // Computed properties
@@ -50,6 +52,7 @@ function CustomUIChatViewModel(config) {
         }).done(function(response) {
             if (response.success) {
                 self.customUIEnabled(response.enabled);
+                self.hasHtml(response.has_html || false);
                 if (response.enabled) {
                     self.lastUpdateTime(new Date().toLocaleString());
                 }
@@ -116,6 +119,7 @@ function CustomUIChatViewModel(config) {
                 // Update status
                 if (response.saved) {
                     self.customUIEnabled(true);
+                    self.hasHtml(true);
                     self.lastUpdateTime(new Date().toLocaleString());
                     
                     // Refresh preview
@@ -224,7 +228,7 @@ function CustomUIChatViewModel(config) {
      * Disable custom UI
      */
     self.disableCustomUI = function() {
-        if (!confirm('Disable custom UI? You can re-enable it by generating a new UI.')) {
+        if (!confirm('Disable custom UI? The HTML will be saved and you can re-enable it later.')) {
             return;
         }
         
@@ -239,6 +243,28 @@ function CustomUIChatViewModel(config) {
             }
         }).fail(function(xhr) {
             self.showNotification('Error disabling custom UI', 'danger');
+        });
+    };
+    
+    /**
+     * Enable custom UI
+     */
+    self.enableCustomUI = function() {
+        $.ajax({
+            url: self.enableUrl,
+            method: 'POST',
+        }).done(function(response) {
+            if (response.success) {
+                self.customUIEnabled(true);
+                self.refreshPreview();
+                self.showNotification('Custom UI enabled', 'success');
+            }
+        }).fail(function(xhr) {
+            var errorMsg = 'Error enabling custom UI';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            }
+            self.showNotification(errorMsg, 'danger');
         });
     };
     

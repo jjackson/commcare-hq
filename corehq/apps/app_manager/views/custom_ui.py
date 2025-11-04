@@ -133,9 +133,13 @@ def get_custom_ui_status(request, domain, app_id):
         custom_ui_entrypoint = app.profile.get('custom_ui_entrypoint', None)
         multimedia_id = app.profile.get('custom_ui_multimedia_id', None)
         
+        # Check if HTML exists even when disabled
+        has_html = bool(multimedia_id)
+        
         return JsonResponse({
             'success': True,
             'enabled': custom_ui_enabled,
+            'has_html': has_html,
             'entrypoint': custom_ui_entrypoint,
             'multimedia_id': multimedia_id
         })
@@ -151,17 +155,14 @@ def get_custom_ui_status(request, domain, app_id):
 @require_permission(HqPermissions.edit_apps, login_decorator=None)
 def view_custom_ui_html(request, domain, app_id):
     """
-    View the raw HTML of the current custom UI
+    View the raw HTML of the custom UI (works even when disabled)
     """
     try:
         app = get_app(domain, app_id)
         
-        if not app.profile.get('custom_ui_enabled'):
-            return HttpResponse('No custom UI is currently active', status=404)
-        
         multimedia_id = app.profile.get('custom_ui_multimedia_id')
         if not multimedia_id:
-            return HttpResponse('No custom UI multimedia found', status=404)
+            return HttpResponse('No custom UI HTML found', status=404)
         
         try:
             multimedia = CommCareMultimedia.get(multimedia_id)
@@ -202,6 +203,42 @@ def disable_custom_ui(request, domain, app_id):
         })
     except Exception as e:
         logger.exception(f"Error disabling custom UI for app {app_id}")
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+@require_POST
+@login_and_domain_required
+@require_permission(HqPermissions.edit_apps, login_decorator=None)
+def enable_custom_ui(request, domain, app_id):
+    """
+    Enable custom UI for an app (if HTML exists)
+    """
+    try:
+        app = get_app(domain, app_id)
+        
+        # Check if HTML exists
+        multimedia_id = app.profile.get('custom_ui_multimedia_id')
+        if not multimedia_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'No custom UI HTML found. Please generate UI first.'
+            }, status=400)
+        
+        if not app.profile:
+            app.profile = {}
+        
+        app.profile['custom_ui_enabled'] = True
+        app.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Custom UI enabled'
+        })
+    except Exception as e:
+        logger.exception(f"Error enabling custom UI for app {app_id}")
         return JsonResponse({
             'success': False,
             'message': str(e)

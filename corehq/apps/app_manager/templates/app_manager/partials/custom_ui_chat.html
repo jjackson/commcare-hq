@@ -101,6 +101,7 @@
             <!-- Status Panel -->
             <div class="panel panel-default mt-2">
                 <div class="panel-body">
+                    <!-- Active State -->
                     <div data-bind="visible: customUIEnabled">
                         <span class="label label-success">
                             <i class="fa fa-check"></i> {% trans "Custom UI Active" %}
@@ -111,13 +112,27 @@
                             <span data-bind="text: lastUpdateTime"></span>
                         </small>
                     </div>
-                    <div data-bind="visible: !customUIEnabled()">
+                    
+                    <!-- Disabled but HTML exists State -->
+                    <div data-bind="visible: !customUIEnabled() && hasHtml()">
+                        <span class="label label-warning">
+                            <i class="fa fa-pause"></i> {% trans "Custom UI Disabled" %}
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                            {% trans "HTML is saved but not active" %}
+                        </small>
+                    </div>
+                    
+                    <!-- No HTML State -->
+                    <div data-bind="visible: !hasHtml()">
                         <span class="label label-default">
                             {% trans "No Custom UI" %}
                         </span>
                     </div>
                     
-                    <div class="mt-2" data-bind="visible: customUIEnabled">
+                    <!-- Buttons when Custom UI is Active -->
+                    <div class="mt-2" data-bind="visible: customUIEnabled() && hasHtml()">
                         <button class="btn btn-sm btn-info btn-block" 
                                 data-bind="click: viewHtml">
                             <i class="fa fa-code"></i> 
@@ -125,8 +140,22 @@
                         </button>
                         <button class="btn btn-sm btn-warning btn-block mt-1" 
                                 data-bind="click: disableCustomUI">
-                            <i class="fa fa-times"></i> 
+                            <i class="fa fa-pause"></i> 
                             {% trans "Disable Custom UI" %}
+                        </button>
+                    </div>
+                    
+                    <!-- Buttons when Custom UI is Disabled but exists -->
+                    <div class="mt-2" data-bind="visible: !customUIEnabled() && hasHtml()">
+                        <button class="btn btn-sm btn-info btn-block" 
+                                data-bind="click: viewHtml">
+                            <i class="fa fa-code"></i> 
+                            {% trans "View HTML" %}
+                        </button>
+                        <button class="btn btn-sm btn-success btn-block mt-1" 
+                                data-bind="click: enableCustomUI">
+                            <i class="fa fa-play"></i> 
+                            {% trans "Enable Custom UI" %}
                         </button>
                     </div>
                 </div>

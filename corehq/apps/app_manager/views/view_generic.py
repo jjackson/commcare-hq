@@ -147,6 +147,7 @@ def view_generic(
                 'generateUrl': reverse('generate_ui_with_ai', args=[domain, app.id]),
                 'statusUrl': reverse('get_custom_ui_status', args=[domain, app.id]),
                 'disableUrl': reverse('disable_custom_ui', args=[domain, app.id]),
+                'enableUrl': reverse('enable_custom_ui', args=[domain, app.id]),
             }
         print(f"DEBUG: ENABLE_CUSTOM_UI_AI in settings = {getattr(settings, 'ENABLE_CUSTOM_UI_AI', False)}")
         print(f"DEBUG: ANTHROPIC_API_KEY exists = {bool(getattr(settings, 'ANTHROPIC_API_KEY', ''))}")
