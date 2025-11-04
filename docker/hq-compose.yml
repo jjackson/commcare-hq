@@ -51,7 +51,7 @@ services:
       - ${VOLUME_PREFIX}${BLANK_IF_TESTS-lib:}/mnt/lib
 
   formplayer:
-    image: docker.io/dimagi/formplayer
+    image: formplayer:local
     environment:
       COMMCARE_HOST: "http://host.docker.internal:8000"
       COMMCARE_ALTERNATE_ORIGINS: "http://localhost:8000,http://127.0.0.1:8000"

@@ -331,15 +331,72 @@ class PreviewAppView(TemplateView):
                     const data = JSON.parse(formDataJson);
                     console.log('[CommCareAPI Preview] Form data:', data);
                     
-                    // Show alert in preview (mobile would submit for real)
-                    alert('Form Submitted (Preview Mode)\\n\\nxmlns: ' + (data.xmlns || 'N/A') + '\\n\\nData: ' + JSON.stringify(data.answers || data, null, 2));
+                    // Build OpenRosa XML submission (matching what Android does)
+                    const xmlns = data.xmlns || 'http://openrosa.org/formdesigner/unknown';
+                    const timestamp = new Date().toISOString();
+                    const formId = 'preview-form-' + Date.now();
                     
-                    // Return JSON string (same as Android)
-                    return JSON.stringify({{
-                        success: true,
-                        formRecordId: 'preview-form-' + Date.now(),
-                        message: 'Form submitted successfully (preview mode)'
-                    }});
+                    // Build answer XML nodes
+                    let answerNodes = '';
+                    if (data.answers) {{
+                        for (const [key, value] of Object.entries(data.answers)) {{
+                            // Simple XML escaping
+                            const escapedValue = String(value)
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;');
+                            answerNodes += `<${{key}}>${{escapedValue}}</${{key}}>\\n`;
+                        }}
+                    }}
+                    
+                    // Construct full XML
+                    const xml = `<?xml version='1.0' ?>
+<data xmlns="${{xmlns}}" xmlns:jrm="http://dev.commcarehq.org/jr/xforms" uiVersion="1" version="1" name="Custom UI Form">
+    <meta>
+        <deviceID>webapps</deviceID>
+        <timeStart>${{timestamp}}</timeStart>
+        <timeEnd>${{timestamp}}</timeEnd>
+        <username>{username}</username>
+        <userID>{user_id}</userID>
+        <instanceID>${{formId}}</instanceID>
+        <appVersion xmlns="http://commcarehq.org/xforms">preview</appVersion>
+    </meta>
+    ${{answerNodes}}
+</data>`;
+                    
+                    // Submit to receiver endpoint (synchronous with async handling)
+                    const submissionUrl = '/a/{domain}/receiver/{app.id}/';
+                    
+                    // Use XMLHttpRequest for synchronous-style operation
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', submissionUrl, false);  // false = synchronous
+                    xhr.setRequestHeader('Content-Type', 'application/xml');
+                    
+                    try {{
+                        xhr.send(xml);
+                        
+                        if (xhr.status === 200 || xhr.status === 201) {{
+                            console.log('[CommCareAPI Preview] Form submitted successfully');
+                            return JSON.stringify({{
+                                success: true,
+                                formRecordId: formId,
+                                message: 'Form submitted successfully'
+                            }});
+                        }} else {{
+                            console.error('[CommCareAPI Preview] Submit failed:', xhr.status, xhr.responseText);
+                            return JSON.stringify({{
+                                success: false,
+                                error: 'Submission failed with status ' + xhr.status
+                            }});
+                        }}
+                    }} catch (submitError) {{
+                        console.error('[CommCareAPI Preview] Submit error:', submitError);
+                        return JSON.stringify({{
+                            success: false,
+                            error: 'Network error: ' + submitError.message
+                        }});
+                    }}
                 }} catch (e) {{
                     console.error('[CommCareAPI Preview] Error:', e);
                     return JSON.stringify({{
