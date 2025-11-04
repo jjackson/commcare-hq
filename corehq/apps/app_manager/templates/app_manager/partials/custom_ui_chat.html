@@ -3,8 +3,8 @@
 
 <div class="custom-ui-ai-container">
     <div class="row">
-        <!-- Chat Panel (Left Side) -->
-        <div class="col-md-5 chat-panel">
+        <!-- Chat Panel -->
+        <div class="col-md-12 chat-panel">
             <div class="panel panel-default chat-panel-inner">
                 <div class="panel-heading">
                     <h4 class="panel-title pull-left">
@@ -118,49 +118,16 @@
                     </div>
                     
                     <div class="mt-2" data-bind="visible: customUIEnabled">
-                        <button class="btn btn-sm btn-warning btn-block" 
+                        <button class="btn btn-sm btn-info btn-block" 
+                                data-bind="click: viewHtml">
+                            <i class="fa fa-code"></i> 
+                            {% trans "View HTML" %}
+                        </button>
+                        <button class="btn btn-sm btn-warning btn-block mt-1" 
                                 data-bind="click: disableCustomUI">
                             <i class="fa fa-times"></i> 
                             {% trans "Disable Custom UI" %}
                         </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Preview Panel (Right Side) -->
-        <div class="col-md-7 preview-panel">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4 class="panel-title pull-left">
-                        <i class="fa fa-eye"></i> {% trans "Live Preview" %}
-                    </h4>
-                    <button class="btn btn-sm btn-default pull-right" 
-                            data-bind="click: refreshPreview">
-                        <i class="fa fa-refresh"></i> {% trans "Refresh" %}
-                    </button>
-                    <div class="clearfix"></div>
-                </div>
-                <div class="panel-body preview-body">
-                    <!-- This will contain the existing preview iframe -->
-                    <div class="preview-wrapper">
-                        {% include "app_manager/partials/preview_app.html" %}
-                    </div>
-                    
-                    <div class="preview-instructions" 
-                         data-bind="visible: !customUIEnabled()">
-                        <div class="alert alert-info">
-                            <i class="fa fa-info-circle"></i>
-                            <strong>{% trans "Get Started" %}</strong>
-                            <p>
-                                {% trans "Use the chat on the left to describe the custom UI you want to create. Claude will generate the HTML, and it will appear here automatically." %}
-                            </p>
-                            <p class="mb-0">
-                                <small>
-                                    {% trans "Example: 'Create a patient intake form with fields for name, age, and medical history.'" %}
-                                </small>
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -170,11 +137,11 @@
 
 <style>
 .custom-ui-ai-container {
-    min-height: 600px;
+    min-height: 400px;
 }
 
 .chat-panel-inner {
-    height: 600px;
+    height: 500px;
     display: flex;
     flex-direction: column;
 }
@@ -273,21 +240,8 @@
     white-space: normal;
 }
 
-.preview-panel .panel {
-    height: 600px;
-}
-
-.preview-body {
-    height: 100%;
-    overflow: auto;
-}
-
-.preview-wrapper {
-    height: 100%;
-}
-
-.preview-instructions {
-    padding: 20px;
+.mt-1 {
+    margin-top: 5px;
 }
 
 .mt-2 {

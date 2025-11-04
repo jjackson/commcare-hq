@@ -243,6 +243,17 @@ function CustomUIChatViewModel(config) {
     };
     
     /**
+     * View HTML in a new window
+     */
+    self.viewHtml = function() {
+        // Construct the URL for viewing HTML
+        var viewHtmlUrl = window.location.pathname.replace('/settings/', '/custom_ui/view_html/');
+        
+        // Open in new window
+        window.open(viewHtmlUrl, '_blank');
+    };
+    
+    /**
      * Scroll conversation to bottom
      */
     self.scrollToBottom = function() {
