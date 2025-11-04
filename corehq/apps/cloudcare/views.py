@@ -378,9 +378,20 @@ class PreviewAppView(TemplateView):
                         
                         if (xhr.status === 200 || xhr.status === 201) {{
                             console.log('[CommCareAPI Preview] Form submitted successfully');
+                            
+                            // Build link to view submission in HQ
+                            const viewUrl = '/a/{domain}/reports/form_data/' + formId + '/';
+                            console.log('[CommCareAPI Preview] View submission at:', window.location.origin + viewUrl);
+                            
+                            // Show alert with link
+                            if (confirm('Form submitted successfully!\\n\\nClick OK to view the submission in a new tab.')) {{
+                                window.open(viewUrl, '_blank');
+                            }}
+                            
                             return JSON.stringify({{
                                 success: true,
                                 formRecordId: formId,
+                                viewUrl: viewUrl,
                                 message: 'Form submitted successfully'
                             }});
                         }} else {{
