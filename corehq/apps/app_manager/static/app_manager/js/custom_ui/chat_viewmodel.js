@@ -31,7 +31,10 @@ function CustomUIChatViewModel(config) {
      * Initialize - load current status
      */
     self.init = function() {
-        self.loadStatus();
+        // Only load status if jQuery is available
+        if (typeof $ !== 'undefined') {
+            self.loadStatus();
+        }
     };
     
     /**
