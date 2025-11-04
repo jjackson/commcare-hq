@@ -218,9 +218,12 @@ function CustomUIChatViewModel(config) {
      * Refresh preview iframe
      */
     self.refreshPreview = function() {
-        var previewIframe = document.querySelector('.preview-wrapper iframe');
+        // Target the main app preview iframe (on the right side of the page)
+        var previewIframe = document.querySelector('.preview-phone-window');
         if (previewIframe) {
             previewIframe.contentWindow.location.reload();
+        } else {
+            console.warn('App preview iframe not found');
         }
     };
     
