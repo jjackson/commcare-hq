@@ -14,37 +14,74 @@ Generate single-file HTML custom UIs with inline CSS and JavaScript that use the
 
 ## CommCareAPI Bridge (Available in window.CommCareAPI)
 
-### Core Methods:
+**IMPORTANT**: CommCareAPI has different implementations in preview vs mobile:
+- HQ Preview: Async methods (returns Promises)
+- Android/iOS Mobile: Sync methods (returns JSON strings)
+
+**Always use this wrapper** to work in both environments:
+
 ```javascript
-// Submit form data to CommCare
-await window.CommCareAPI.submitForm({
-    xmlns: 'http://openrosa.org/formdesigner/form-id',
-    answers: {
-        question_id_1: 'answer1',
-        question_id_2: 'answer2',
-        nested: {
-            sub_question: 'value'
+// API Wrapper for cross-platform compatibility
+const API = {
+    async submitForm(data) {
+        if (window.CommCareAPI.submitForm.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+            return await window.CommCareAPI.submitForm(data);
+        } else {
+            const result = window.CommCareAPI.submitForm(JSON.stringify(data));
+            return JSON.parse(result);
         }
+    },
+    
+    async getCases(caseType) {
+        if (window.CommCareAPI.getCases.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+            return await window.CommCareAPI.getCases(caseType);
+        } else {
+            const result = window.CommCareAPI.getCases(caseType || '');
+            return JSON.parse(result);
+        }
+    },
+    
+    async getCase(caseId) {
+        if (window.CommCareAPI.getCase.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+            return await window.CommCareAPI.getCase(caseId);
+        } else {
+            const result = window.CommCareAPI.getCase(caseId);
+            return JSON.parse(result);
+        }
+    },
+    
+    async getCurrentUser() {
+        if (window.CommCareAPI.getCurrentUser.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+            return await window.CommCareAPI.getCurrentUser();
+        } else {
+            const result = window.CommCareAPI.getCurrentUser();
+            return JSON.parse(result);
+        }
+    },
+    
+    log(level, message) {
+        window.CommCareAPI.log(level, message);
     }
+};
+
+// Then use API instead of window.CommCareAPI:
+const result = await API.submitForm({
+    xmlns: 'http://openrosa.org/formdesigner/form-id',
+    answers: { question_id_1: 'answer1', question_id_2: 'answer2' }
 });
-// Returns: { success: true, formRecordId: 'form-uuid', message: '...' }
 
-// Get all cases of a specific type
-const cases = await window.CommCareAPI.getCases('patient');
-// Returns: Array of case objects
-
-// Get a specific case by ID
-const caseData = await window.CommCareAPI.getCase('case-uuid-123');
-// Returns: { case_id, case_name, case_type, owner_id, date_opened, properties: {...} }
-
-// Get current user information
-const user = await window.CommCareAPI.getCurrentUser();
-// Returns: { username, userId, domain, isPreview }
-
-// Log messages (for debugging)
-window.CommCareAPI.log('info', 'Message here');
-// Levels: 'debug', 'info', 'warn', 'error'
+const cases = await API.getCases('patient');
+const caseData = await API.getCase('case-uuid-123');
+const user = await API.getCurrentUser();
+API.log('info', 'Message here');
 ```
+
+### API Methods Return Values:
+- `submitForm()`: `{ success: true, formRecordId: 'uuid', message: '...' }`
+- `getCases(caseType)`: Array of `{ caseId, caseType, name, status, properties: {...} }`
+- `getCase(caseId)`: `{ caseId, caseType, name, status, dateOpened, lastModified, ownerId, properties: {...} }`
+- `getCurrentUser()`: `{ username, userId, domain?, isPreview? }`
+- `log(level, message)`: void (levels: 'debug', 'info', 'warn', 'error')
 
 ## Requirements for Generated UIs:
 
@@ -91,14 +128,57 @@ window.CommCareAPI.log('info', 'Message here');
     </div>
     
     <script>
-        // Wait for CommCareAPI to load
+        // CommCareAPI Wrapper (ALWAYS INCLUDE THIS)
+        const API = {
+            async submitForm(data) {
+                if (window.CommCareAPI.submitForm.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+                    return await window.CommCareAPI.submitForm(data);
+                } else {
+                    const result = window.CommCareAPI.submitForm(JSON.stringify(data));
+                    return JSON.parse(result);
+                }
+            },
+            async getCases(caseType) {
+                if (window.CommCareAPI.getCases.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+                    return await window.CommCareAPI.getCases(caseType);
+                } else {
+                    const result = window.CommCareAPI.getCases(caseType || '');
+                    return JSON.parse(result);
+                }
+            },
+            async getCase(caseId) {
+                if (window.CommCareAPI.getCase.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+                    return await window.CommCareAPI.getCase(caseId);
+                } else {
+                    const result = window.CommCareAPI.getCase(caseId);
+                    return JSON.parse(result);
+                }
+            },
+            async getCurrentUser() {
+                if (window.CommCareAPI.getCurrentUser.constructor.name === 'AsyncFunction' || window.CommCareAPI.isPreview) {
+                    return await window.CommCareAPI.getCurrentUser();
+                } else {
+                    const result = window.CommCareAPI.getCurrentUser();
+                    return JSON.parse(result);
+                }
+            },
+            log(level, message) {
+                window.CommCareAPI.log(level, message);
+            }
+        };
+        
+        // Initialize app
         async function init() {
             if (!window.CommCareAPI) {
                 console.error('CommCareAPI not available');
                 return;
             }
             
-            // Your app logic here
+            API.log('info', 'Custom UI initialized');
+            
+            // Your app logic here using API
+            const user = await API.getCurrentUser();
+            console.log('Current user:', user);
         }
         
         // Initialize when DOM is ready
