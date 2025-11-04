@@ -1,3 +1,6 @@
+import $ from "jquery";
+import ko from "knockout";
+
 /**
  * Knockout.js ViewModel for Custom UI Chat Interface
  */
@@ -271,7 +274,10 @@ function CustomUIChatViewModel(config) {
         }
     };
     
-    // Initialize on creation
-    self.init();
+    // Don't auto-initialize - will be called after bindings are applied
 }
+
+export default {
+    CustomUIChatViewModel: CustomUIChatViewModel,
+};
 

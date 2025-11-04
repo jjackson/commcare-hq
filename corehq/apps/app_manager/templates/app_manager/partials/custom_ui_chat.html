@@ -295,33 +295,5 @@
 }
 </style>
 
-<script src="{% static 'app_manager/js/custom_ui/chat_viewmodel.js' %}"></script>
-<script>
-(function() {
-    function initChatUI() {
-        // Wait for both jQuery and Knockout to be available
-        if (typeof $ === 'undefined' || typeof ko === 'undefined') {
-            setTimeout(initChatUI, 100);
-            return;
-        }
-        
-        var chatViewModel = new CustomUIChatViewModel({
-            appId: '{{ app.id }}',
-            domain: '{{ domain }}',
-            generateUrl: '{% url "generate_ui_with_ai" domain app.id %}',
-            statusUrl: '{% url "get_custom_ui_status" domain app.id %}',
-            disableUrl: '{% url "disable_custom_ui" domain app.id %}'
-        });
-        
-        ko.applyBindings(chatViewModel, document.querySelector('.custom-ui-ai-container'));
-    }
-    
-    // Start initialization
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initChatUI);
-    } else {
-        initChatUI();
-    }
-})();
-</script>
+{# Chat ViewModel is initialized in app_view.js using initialPageData #}
 

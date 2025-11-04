@@ -24,6 +24,7 @@ import "app_manager/js/custom_assertions";
 import "hqwebapp/js/components/select_toggle";
 import "hqwebapp/js/bootstrap3/knockout_bindings.ko";
 import "jquery-textchange/jquery.textchange";   // textchange is referenced in ko bindings in app_settings.html
+import customUIChatViewModel from "app_manager/js/custom_ui/chat_viewmodel";
 
 $(function () {
     // App name
@@ -265,5 +266,16 @@ $(function () {
         saveButton.ui.appendTo($saveContainer);
         sectionChanger.attachToForm($saveContainer);
     })();
+
+    // Custom UI AI Chat
+    var $customUIChatContainer = $('.custom-ui-ai-container');
+    if ($customUIChatContainer.length) {
+        var chatOptions = initialPageData.get("custom_ui_chat_options");
+        if (chatOptions) {
+            var chatVM = new customUIChatViewModel.CustomUIChatViewModel(chatOptions);
+            $customUIChatContainer.koApplyBindings(chatVM);
+            chatVM.init();  // Load status after bindings are applied
+        }
+    }
 
 });
